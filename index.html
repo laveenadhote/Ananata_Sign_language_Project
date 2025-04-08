@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign & Speech Translator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Nunito', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    /* Navigation Styles */
+    .navbar {
+      background-color: #fff;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #4a90e2;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-links {
+      display: flex;
+      list-style: none;
+    }
+    .nav-links li {
+      margin-left: 25px;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: color 0.3s;
+    }
+    .nav-links a:hover {
+      color: #4a90e2;
+    }
+    .hamburger {
+      display: none;
+      cursor: pointer;
+      font-size: 1.5rem;
+    }
+    /* Main Content Styles */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 20px;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.2rem;
+      color: #4a90e2;
+      margin-bottom: 20px;
+    }
+    label {
+      font-size: 1.2rem;
+      margin-top: 20px;
+      display: block;
+      color: #666;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+    button {
+      background-color: #4a90e2;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #357ABD;
+    }
+    .camera-container, #outputText {
+      margin-top: 20px;
+      display: none;
+    }
+    video {
+      width: 100%;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+    .option-btn {
+      display: flex;
+      gap: 10px;
+      flex-direction: row;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .option-btn button {
+      width: auto;
+      padding: 10px 20px;
+    }
+    /* Footer Styles */
+    footer {
+      background-color: #333;
+      color: #fff;
+      padding: 40px 0 20px;
+    }
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+    }
+    .footer-section h3 {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: #4a90e2;
+    }
+    .footer-section ul {
+      list-style: none;
+    }
+    .footer-section ul li {
+      margin-bottom: 8px;
+    }
+    .footer-section a {
+      color: #ddd;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .footer-section a:hover {
+      color: #4a90e2;
+    }
+    .footer-bottom {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #444;
+    }
+    .social-icons {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .social-icons a {
+      color: #fff;
+      font-size: 1.2rem;
+    }
+    /* Responsive Styles */
+    @media (max-width: 768px) {
+      .nav-links {
+        position: fixed;
+        top: 70px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 70px);
+        background-color: #fff;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 40px;
+        transition: left 0.3s;
+      }
+      .nav-links.active {
+        left: 0;
+      }
+      .nav-links li {
+        margin: 15px 0;
+      }
+      .hamburger {
+        display: block;
+      }
+      .footer-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <i class="fas fa-hands-helping"></i>
+        ANANTAH
+      </a>
+      <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Translate</a></li>
+        <li><a href="#">Learn</a></li>
+        <li><a href="#">Features</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+      <div class="hamburger" onclick="toggleMenu()">
+        <i class="fas fa-bars"></i>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main>
+    <div class="container">
+      <h1><i class="fas fa-hands-helping"></i> Sign & Speech Translator</h1>
+      <div id="nameScreen">
+        <label for="username">What's your name?</label>
+        <input type="text" id="username" placeholder="Enter your name">
+        <button onclick="goToLanguage()">Next</button>
+      </div>
+      <div id="languageScreen" style="display: none;">
+        <h2>Hello <span id="greetName"></span> 👋</h2>
+        <label for="language">Choose a language:</label>
+        <select id="language">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="es">Spanish</option>
+          <option value="fr">French</option>
+        </select>
+        <label for="mode">Choose mode:</label>
+        <select id="mode" onchange="toggleMode()">
+          <option value="sign-to-text">Sign to Text</option>
+          <option value="sign-to-speech">Sign to Speech</option>
+          <option value="speech-to-text">Speech to Text</option>
+        </select>
+        <div class="option-btn">
+          <button onclick="flipCamera()">Flip Camera</button>
+          <button onclick="startTranslation()">Start Translation</button>
+        </div>
+      </div>
+      <div class="camera-container" id="cameraContainer">
+        <video id="video" autoplay playsinline></video>
+      </div>
+      <p id="outputText"></p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-container">
+      <div class="footer-section">
+        <h3>Services</h3>
+        <ul>
+          <li><a href="#">Sign to Text</a></li>
+          <li><a href="#">Sign to Speech</a></li>
+          <li><a href="#">Speech to Text</a></li>
+          <li><a href="#">Language Support</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Resources</h3>
+        <ul>
+          <li><a href="#">Learning Sign Language</a></li>
+          <li><a href="#">Developer API</a></li>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">Community Forum</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>About Us</h3>
+        <ul>
+          <li><a href="#">Our Mission</a></li>
+          <li><a href="#">Team</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Partners</a></li>
+        </ul>
+      </div>
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <ul>
+          <li><a href="mailto:info@anantah.com">info@anantah.com</a></li>
+          <li><a href="tel:+1234567890">+123 456 7890</a></li>
+          <li>
+            <div class="social-icons">
+              <a href="#"><i class="fab fa-facebook"></i></a>
+              <a href="#"><i class="fab fa-twitter"></i></a>
+              <a href="#"><i class="fab fa-instagram"></i></a>
+              <a href="#"><i class="fab fa-youtube"></i></a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 ANANTAH. Powered by Team Anantah. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    let currentCamera = "user";
+    let stream;
+    
+    function toggleMenu() {
+      document.querySelector('.nav-links').classList.toggle('active');
+    }
+    
+    function goToLanguage() {
+      const name = document.getElementById("username").value.trim();
+      if (name) {
+        document.getElementById("nameScreen").style.display = "none";
+        document.getElementById("languageScreen").style.display = "block";
+        document.getElementById("greetName").innerText = name;
+      }
+    }
+    
+    async function toggleMode() {
+      const mode = document.getElementById("mode").value;
+      const cameraContainer = document.getElementById("cameraContainer");
+      const outputText = document.getElementById("outputText");
+      
+      if (mode === "speech-to-text") {
+        stopCamera();
+        cameraContainer.style.display = "none";
+        outputText.style.display = "block";
+        outputText.innerText = "Listening...";
+        startSpeechToText();
+      } else {
+        outputText.innerText = "";
+        outputText.style.display = "block";
+        cameraContainer.style.display = "block";
+        startCamera();
+      }
+    }
+    
+    async function startCamera() {
+      stopCamera();
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentCamera } });
+        document.getElementById("video").srcObject = stream;
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        alert("Could not access camera. Please check permissions.");
+      }
+    }
+    
+    function stopCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    }
+    
+    function flipCamera() {
+      currentCamera = currentCamera === "user" ? "environment" : "user";
+      startCamera();
+    }
+    
+    function startTranslation() {
+      const mode = document.getElementById("mode").value;
+      if (mode !== "speech-to-text") {
+        // Simulate sign language translation
+        setTimeout(() => {
+          document.getElementById("outputText").innerText = "Hello! This is a simulated translation of sign language.";
+          document.getElementById("outputText").style.display = "block";
+        }, 2000);
+      }
+    }
+    
+    function startSpeechToText() {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('Speech Recognition not supported in your browser!');
+        return;
+      }
+      
+      const recognition = new webkitSpeechRecognition();
+      const language = document.getElementById("language").value;
+      
+      recognition.continuous = false;
+      
+      // Map language codes to speech recognition language codes
+      const langMap = {
+        'en': 'en-US',
+        'hi': 'hi-IN',
+        'es': 'es-ES',
+        'fr': 'fr-FR'
+      };
+      
+      recognition.lang = langMap[language] || 'en-US';
+      
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById("outputText").innerText = transcript;
+      };
+      
+      recognition.onerror = function(event) {
+        document.getElementById("outputText").innerText = "Error recognizing speech. Please try again.";
+      };
+      
+      recognition.onend = function() {
+        // Optional: restart recognition for continuous listening
+        // recognition.start();
+      };
+      
+      recognition.start();
+    }
+    
+    // Add event listener for page load
+    window.addEventListener('DOMContentLoaded', () => {
+      // Any initialization can go here
+    });
+  </script>
+</body>
+</html>

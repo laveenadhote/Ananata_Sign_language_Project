@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Language Translator</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .video-container {
+      position: relative;
+      width: 640px;
+      height: 480px;
+      background-color: #000;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror video for natural movement */
+    }
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 5px;
+      background-color: #3498db;
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    button.stop {
+      background-color: #e74c3c;
+    }
+    button.stop:hover {
+      background-color: #c0392b;
+    }
+    .output {
+      width: 100%;
+      max-width: 640px;
+      min-height: 120px;
+      padding: 1rem;
+      border-radius: 10px;
+      background-color: white;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .sign-dictionary {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 640px;
+    }
+    .dictionary-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+    .signs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+    }
+    .sign-card {
+      background-color: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+    .sign-image {
+      height: 80px;
+      width: 80px;
+      margin: 0 auto;
+      background-color: #eee;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+    .sign-label {
+      margin-top: 0.5rem;
+      font-weight: bold;
+    }
+    .detection-status {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background-color: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 5px;
+      font-size: 0.9rem;
+    }
+    .detected-sign {
+      position: absolute;
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      background-color: rgba(46, 204, 113, 0.8);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 5px;
+      font-size: 1.2rem;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .detected-sign.active {
+      opacity: 1;
+    }
+    .history {
+      width: 100%;
+      max-width: 640px;
+    }
+    .history-title {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-height: 200px;
+      overflow-y: auto;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .history-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .history-time {
+      font-size: 0.8rem;
+      color: #7f8c8d;
+    }
+    .history-word {
+      font-weight: bold;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sign Language Translator</h1>
+    <p>Convert sign language to text and speech in real-time</p>
+  </header>
+
+  <div class="container">
+    <div class="app-container">
+      <div class="video-container">
+        <video id="video" playsinline></video>
+        <div class="detection-status">Detecting signs...</div>
+        <div class="detected-sign" id="detected-sign"></div>
+      </div>
+
+      <div class="controls">
+        <button id="start-btn">Start Camera</button>
+        <button id="stop-btn" class="stop" disabled>Stop Camera</button>
+        <button id="translate-btn" disabled>Translate Signs</button>
+      </div>
+
+      <div class="output">
+        <p id="output-text">Translation will appear here...</p>
+      </div>
+
+      <div class="history">
+        <h2 class="history-title">Detection History</h2>
+        <ul class="history-list" id="history-list">
+          <!-- Detection history will be added here -->
+        </ul>
+      </div>
+
+      <div class="sign-dictionary">
+        <h2 class="dictionary-title">Supported Signs</h2>
+        <div class="signs-grid">
+          <div class="sign-card">
+            <div class="sign-image">👋</div>
+            <div class="sign-label">Hello</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👍</div>
+            <div class="sign-label">Yes</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👎</div>
+            <div class="sign-label">No</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">🙏</div>
+            <div class="sign-label">Please</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👌</div>
+            <div class="sign-label">OK</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👆</div>
+            <div class="sign-label">Help</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">🖐️</div>
+            <div class="sign-label">Stop</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">✋</div>
+            <div class="sign-label">Wait</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👋</div>
+            <div class="sign-label">Goodbye</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">🙋</div>
+            <div class="sign-label">Question</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👉</div>
+            <div class="sign-label">You</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">👈</div>
+            <div class="sign-label">Me</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">🤝</div>
+            <div class="sign-label">Thank you</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">🤲</div>
+            <div class="sign-label">Want</div>
+          </div>
+          <div class="sign-card">
+            <div class="sign-image">💧</div>
+            <div class="sign-label">Water</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Sign Language Translator &copy; 2025. Powered by advanced AI detection.</p>
+  </footer>
+
+  <script>
+    // DOM Elements
+    const video = document.getElementById('video');
+    const startBtn = document.getElementById('start-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    const translateBtn = document.getElementById('translate-btn');
+    const outputText = document.getElementById('output-text');
+    const detectedSignElement = document.getElementById('detected-sign');
+    const historyList = document.getElementById('history-list');
+
+    // Supported signs with their detection probability (simulated)
+    const supportedSigns = [
+      { name: 'Hello', probability: 0.9 },
+      { name: 'Yes', probability: 0.95 },
+      { name: 'No', probability: 0.92 },
+      { name: 'Please', probability: 0.88 },
+      { name: 'OK', probability: 0.93 },
+      { name: 'Help', probability: 0.89 },
+      { name: 'Stop', probability: 0.91 },
+      { name: 'Wait', probability: 0.87 },
+      { name: 'Goodbye', probability: 0.94 },
+      { name: 'Question', probability: 0.86 },
+      { name: 'You', probability: 0.9 },
+      { name: 'Me', probability: 0.92 },
+      { name: 'Thank you', probability: 0.91 },
+      { name: 'Want', probability: 0.88 },
+      { name: 'Water', probability: 0.89 }
+    ];
+
+    let stream = null;
+    let detectionInterval = null;
+    let currentSentence = [];
+
+    // Start the camera
+    startBtn.addEventListener('click', async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user' } 
+        });
+        video.srcObject = stream;
+        video.play();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        translateBtn.disabled = false;
+        
+        // Start the simulated sign detection
+        startSignDetection();
+        
+        outputText.textContent = "Camera is active. Start signing to detect.";
+      } catch (err) {
+        outputText.textContent = "Error accessing camera: " + err.message;
+      }
+    });
+
+    // Stop the camera
+    stopBtn.addEventListener('click', () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        video.srcObject = null;
+      }
+      stopSignDetection();
+      startBtn.disabled = false;
+      stopBtn.disabled = true;
+      translateBtn.disabled = true;
+      outputText.textContent = "Camera stopped. Press 'Start Camera' to begin.";
+    });
+
+    // Translate button
+    translateBtn.addEventListener('click', () => {
+      if (currentSentence.length > 0) {
+        const sentence = currentSentence.join(' ');
+        outputText.textContent = "Translation: " + sentence;
+        speakText(sentence);
+      } else {
+        outputText.textContent = "No signs detected yet. Please make some signs.";
+      }
+    });
+
+    // Start sign detection (simulated)
+    function startSignDetection() {
+      if (detectionInterval) clearInterval(detectionInterval);
+      
+      detectionInterval = setInterval(() => {
+        // Simulate random sign detection
+        if (Math.random() > 0.6) {
+          const randomSignIndex = Math.floor(Math.random() * supportedSigns.length);
+          const detectedSign = supportedSigns[randomSignIndex];
+          
+          // Show the detected sign
+          detectedSignElement.textContent = detectedSign.name;
+          detectedSignElement.classList.add('active');
+          
+          // Add to current sentence
+          currentSentence.push(detectedSign.name);
+          
+          // Add to history
+          addToHistory(detectedSign.name);
+          
+          // Update output
+          if (currentSentence.length > 0) {
+            outputText.textContent = "Detected signs: " + currentSentence.join(' ');
+          }
+          
+          // Hide the detected sign after a delay
+          setTimeout(() => {
+            detectedSignElement.classList.remove('active');
+          }, 2000);
+        }
+      }, 3000); // Check for signs every 3 seconds
+    }
+
+    // Stop sign detection
+    function stopSignDetection() {
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
+        detectionInterval = null;
+      }
+    }
+
+    // Add detected sign to history
+    function addToHistory(sign) {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', { 
+        hour12: true, 
+        hour: 'numeric', 
+        minute: 'numeric',
+        second: 'numeric'
+      });
+      
+      const historyItem = document.createElement('li');
+      historyItem.className = 'history-item';
+      historyItem.innerHTML = `
+        <span class="history-time">${timeString}</span>
+        <span class="history-word">${sign}</span>
+      `;
+      
+      historyList.prepend(historyItem);
+      
+      // Limit history items
+      if (historyList.children.length > 10) {
+        historyList.removeChild(historyList.lastChild);
+      }
+    }
+
+    // Text-to-speech function
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      } else {
+        console.log("Text-to-speech not supported in this browser");
+      }
+    }
+  </script>
+</body>
+</html>
